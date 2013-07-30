@@ -16,7 +16,12 @@ import datetime
 from itertools import izip
 import numpy as np
 
-from pandas.io.parsers import TextParser
+import imp
+import myparsers
+imp.reload(myparsers)
+
+TextParser = myparsers.TextParser
+
 from pandas.tseries.period import Period
 from pandas import json
 
@@ -133,8 +138,8 @@ class ExcelFile(object):
         skipfooter = kwds.pop('skipfooter', None)
         if skipfooter is not None:
             skip_footer = skipfooter
-
-        return  self._parse_excel(sheetname, header=header,
+            
+        res = self._parse_excel(sheetname, header=header,
                                      skiprows=skiprows, index_col=index_col,
                                      has_index_names=has_index_names,
                                      parse_cols=parse_cols,
@@ -145,6 +150,20 @@ class ExcelFile(object):
                                      chunksize=chunksize,
                                      skip_footer=skip_footer,
                                      **kwds)
+        print '\n res a', res
+
+#        return  self._parse_excel(sheetname, header=header,
+#                                     skiprows=skiprows, index_col=index_col,
+#                                     has_index_names=has_index_names,
+#                                     parse_cols=parse_cols,
+#                                     parse_dates=parse_dates,
+#                                     date_parser=date_parser,
+#                                     na_values=na_values,
+#                                     thousands=thousands,
+#                                     chunksize=chunksize,
+#                                     skip_footer=skip_footer,
+#                                     **kwds)
+        return  res
 
     def _should_parse(self, i, parse_cols):
 
@@ -226,9 +245,13 @@ class ExcelFile(object):
                     row.append(value)
 
             data.append(row)
-
+        
+#OK        
+#        print data
+            
         if header is not None:
             data[header] = _trim_excel_header(data[header])
+            print data[header]
 
         parser = TextParser(data, header=header, index_col=index_col,
                             has_index_names=has_index_names,
@@ -240,8 +263,13 @@ class ExcelFile(object):
                             skip_footer=skip_footer,
                             chunksize=chunksize,
                             **kwds)
+#        print '\n parser.read() 01', parser.read()
 
-        return parser.read()
+        x = parser.read()
+        print 'print rs', x.GHI[50:60]     
+        
+#        return parser.read()
+        return x
 
     @property
     def sheet_names(self):
@@ -251,6 +279,8 @@ class ExcelFile(object):
 def _trim_excel_header(row):
     # trim header row so auto-index inference works
     # xlrd uses '' , openpyxl None
+    # works
+#    print '\n _trim_excel_header', row
     while len(row) > 0 and (row[0] == '' or row[0] is None):
         row = row[1:]
     return row
